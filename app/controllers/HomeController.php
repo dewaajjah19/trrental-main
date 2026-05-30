@@ -249,37 +249,44 @@ class HomeController extends Controller
     }
 
 
-    private function uploadDokumen($field, $uploadDir, $required = false)
+    private function uploadDokumen($field, $uploadDir)
     {
+        // Jika tidak ada file yang dikirim
         if (empty($_FILES[$field]['name'])) {
-            if ($required) {
-                die('Dokumen wajib belum diupload: ' . $field);
-            }
-
             return null;
         }
 
-        if ($_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
-            die('Gagal upload dokumen: ' . $field);
-        }
+        // Deteksi apakah aplikasi sedang berjalan di Vercel
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $isVercel = getenv('VERCEL') || strpos($host, 'vercel.app') !== false;
 
-        $ext = strtolower(pathinfo($_FILES[$field]['name'], PATHINFO_EXTENSION));
+        // Validasi ekstensi file
+        $ext = pathinfo($_FILES[$field]['name'], PATHINFO_EXTENSION);
         $allowed = ['jpg', 'jpeg', 'png', 'webp'];
 
-        if (!in_array($ext, $allowed)) {
-            die('Format file tidak valid untuk ' . $field . '. Gunakan JPG, JPEG, PNG, atau WEBP.');
+        if (!in_array(strtolower($ext), $allowed)) {
+            return null;
         }
 
-        // Maksimal 10MB
-        if ($_FILES[$field]['size'] > 10 * 1024 * 1024) {
-            die('Ukuran file terlalu besar untuk ' . $field . '. Maksimal 10MB.');
+        // Khusus Vercel:
+        // Vercel tidak bisa menyimpan file ke folder public/assets/img/dokumen
+        // karena filesystem bersifat read-only.
+        // Jadi file tidak disimpan, tapi proses booking tetap lanjut.
+        if ($isVercel) {
+            return null;
+        }
+
+        // Khusus localhost / hosting PHP biasa:
+        // Upload tetap berjalan seperti biasa.
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
         }
 
         $fileName = uniqid($field . '_') . '.' . $ext;
         $targetPath = $uploadDir . $fileName;
 
         if (!move_uploaded_file($_FILES[$field]['tmp_name'], $targetPath)) {
-            die('Gagal menyimpan file: ' . $field);
+            return null;
         }
 
         return $fileName;
