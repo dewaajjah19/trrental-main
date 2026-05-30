@@ -5,7 +5,7 @@ function getDB()
     $host = getenv('DB_HOST') ?: 'localhost';
     $user = getenv('DB_USER') ?: 'root';
     $pass = getenv('DB_PASS') ?: '';
-    $name = getenv('DB_NAME') ?: ''db_trrental'';
+    $name = getenv('DB_NAME') ?: 'db_trrental';
     $port = getenv('DB_PORT') ?: 3306;
 
     $conn = new mysqli($host, $user, $pass, $name, (int)$port);
