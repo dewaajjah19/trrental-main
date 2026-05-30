@@ -124,9 +124,17 @@ class HomeController extends Controller
 
             // ==============================
             // UPLOAD DOKUMEN
+            // Localhost  : dokumen disimpan normal
+            // Vercel     : dokumen tidak disimpan karena filesystem read-only,
+            //              tapi proses booking tetap lanjut
             // ==============================
             $uploadDir = BASE_PATH . '/public/assets/img/dokumen/';
-            if (!is_dir($uploadDir)) {
+
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $isVercel = getenv('VERCEL') || strpos($host, 'vercel.app') !== false;
+
+            // Folder upload hanya dibuat saat berjalan di localhost / hosting biasa
+            if (!$isVercel && !is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
 
@@ -249,35 +257,44 @@ class HomeController extends Controller
     }
 
 
-    private function uploadDokumen($field, $uploadDir)
+    private function uploadDokumen($field, $uploadDir, $required = false)
     {
-        // Jika tidak ada file yang dikirim
-        if (empty($_FILES[$field]['name'])) {
-            return null;
-        }
-
         // Deteksi apakah aplikasi sedang berjalan di Vercel
         $host = $_SERVER['HTTP_HOST'] ?? '';
         $isVercel = getenv('VERCEL') || strpos($host, 'vercel.app') !== false;
+
+        // Jika tidak ada file yang dikirim
+        if (empty($_FILES[$field]['name'])) {
+            // Di localhost, kalau file wajib tapi kosong, hentikan proses
+            if ($required && !$isVercel) {
+                die('File dokumen wajib diupload: ' . $field);
+            }
+
+            return null;
+        }
 
         // Validasi ekstensi file
         $ext = pathinfo($_FILES[$field]['name'], PATHINFO_EXTENSION);
         $allowed = ['jpg', 'jpeg', 'png', 'webp'];
 
         if (!in_array(strtolower($ext), $allowed)) {
+            if ($required && !$isVercel) {
+                die('Format file tidak valid: ' . $field);
+            }
+
             return null;
         }
 
         // Khusus Vercel:
         // Vercel tidak bisa menyimpan file ke folder public/assets/img/dokumen
         // karena filesystem bersifat read-only.
-        // Jadi file tidak disimpan, tapi proses booking tetap lanjut.
+        // Jadi file tidak disimpan, tapi booking tetap lanjut.
         if ($isVercel) {
             return null;
         }
 
         // Khusus localhost / hosting PHP biasa:
-        // Upload tetap berjalan seperti biasa.
+        // Upload tetap berjalan normal.
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
@@ -286,6 +303,10 @@ class HomeController extends Controller
         $targetPath = $uploadDir . $fileName;
 
         if (!move_uploaded_file($_FILES[$field]['tmp_name'], $targetPath)) {
+            if ($required) {
+                die('Gagal menyimpan file: ' . $field);
+            }
+
             return null;
         }
 
