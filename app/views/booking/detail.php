@@ -12,6 +12,39 @@ if (!function_exists('e')) {
     }
 }
 
+if (!function_exists('dokumenUrl')) {
+    function dokumenUrl($file)
+    {
+        if (empty($file)) {
+            return '';
+        }
+
+        // Kalau file sudah berupa URL, berarti dari Vercel Blob
+        if (preg_match('/^https?:\/\//i', $file)) {
+            return $file;
+        }
+
+        // Kalau bukan URL, berarti file lokal localhost
+        return BASE_URL . '/public/assets/img/dokumen/' . rawurlencode($file);
+    }
+}
+
+if (!function_exists('dokumenName')) {
+    function dokumenName($file)
+    {
+        if (empty($file)) {
+            return '-';
+        }
+
+        if (preg_match('/^https?:\/\//i', $file)) {
+            $path = parse_url($file, PHP_URL_PATH);
+            return basename($path);
+        }
+
+        return $file;
+    }
+}
+
 // =====================================================
 // DATA FORMATTER / LABEL UTAMA
 // =====================================================
@@ -349,6 +382,8 @@ ob_start();
 
         foreach ($docs as $doc):
             if (empty($doc['file'])) continue;
+            $docUrl = dokumenUrl($doc['file']);
+            $docName = dokumenName($doc['file']);
         ?>
             <div class="col-md-3 mb-4">
                 <div class="table-card text-center h-100">
@@ -375,16 +410,16 @@ ob_start();
                     </h6>
 
                     <!-- Preview Dokumen -->
-                    <img src="<?= BASE_URL ?>/public/assets/img/dokumen/<?= e($doc['file']) ?>"
+                    <img src="<?= e($docUrl) ?>"
                         style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-bottom:12px">
 
                     <!-- Nama File Dokumen -->
                     <div class="small text-muted mb-3" style="word-break:break-word;">
-                        <?= e($doc['file']) ?>
+                        <?= e($docName) ?>
                     </div>
 
                     <!-- Tombol Lihat Dokumen -->
-                    <a href="<?= BASE_URL ?>/public/assets/img/dokumen/<?= e($doc['file']) ?>"
+                    <a href="<?= e($docUrl) ?>"
                         target="_blank"
                         class="btn btn-purple btn-sm w-100">
                         <i class="fas fa-eye mr-1"></i> Lihat Dokumen

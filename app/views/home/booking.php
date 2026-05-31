@@ -350,7 +350,7 @@ $timeOptions = [
                                                     <div class="upload-icon"><i class="fas fa-address-card"></i></div>
                                                     <div class="upload-label">Identity Card</div>
                                                     <div class="upload-hint"><span>Click to upload</span> or drag & drop</div>
-                                                    <div class="upload-hint">JPG, PNG max 10MB</div>
+                                                    <div class="upload-hint">JPG, PNG max 4MB</div>
                                                 </div>
                                             </div>
                                         </div>

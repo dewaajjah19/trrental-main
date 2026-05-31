@@ -259,42 +259,53 @@ class HomeController extends Controller
 
     private function uploadDokumen($field, $uploadDir, $required = false)
     {
-        // Deteksi apakah aplikasi sedang berjalan di Vercel
+        // Deteksi environment
         $host = $_SERVER['HTTP_HOST'] ?? '';
         $isVercel = getenv('VERCEL') || strpos($host, 'vercel.app') !== false;
 
         // Jika tidak ada file yang dikirim
         if (empty($_FILES[$field]['name'])) {
-            // Di localhost, kalau file wajib tapi kosong, hentikan proses
-            if ($required && !$isVercel) {
+            if ($required) {
                 die('File dokumen wajib diupload: ' . $field);
             }
 
             return null;
         }
 
-        // Validasi ekstensi file
-        $ext = pathinfo($_FILES[$field]['name'], PATHINFO_EXTENSION);
-        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-
-        if (!in_array(strtolower($ext), $allowed)) {
-            if ($required && !$isVercel) {
-                die('Format file tidak valid: ' . $field);
+        // Validasi error upload bawaan PHP
+        if (!isset($_FILES[$field]['error']) || $_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
+            if ($required) {
+                die('Upload file gagal: ' . $field);
             }
 
             return null;
         }
 
-        // Khusus Vercel:
-        // Vercel tidak bisa menyimpan file ke folder public/assets/img/dokumen
-        // karena filesystem bersifat read-only.
-        // Jadi file tidak disimpan, tapi booking tetap lanjut.
-        if ($isVercel) {
+        // Validasi ekstensi file
+        $ext = strtolower(pathinfo($_FILES[$field]['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+        if (!in_array($ext, $allowed)) {
+            if ($required) {
+                die('Format file tidak valid. Gunakan JPG, JPEG, PNG, atau WEBP: ' . $field);
+            }
+
             return null;
         }
 
+        // Khusus Vercel: batasi agar aman dengan limit server upload Vercel
+        if ($isVercel) {
+            $maxSize = 4 * 1024 * 1024; // 4 MB
+
+            if ($_FILES[$field]['size'] > $maxSize) {
+                die('Ukuran file terlalu besar untuk upload online. Maksimal 4MB: ' . $field);
+            }
+
+            return $this->uploadDokumenToVercelBlob($field, $ext);
+        }
+
         // Khusus localhost / hosting PHP biasa:
-        // Upload tetap berjalan normal.
+        // Upload tetap berjalan normal seperti sebelumnya.
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
@@ -311,5 +322,112 @@ class HomeController extends Controller
         }
 
         return $fileName;
+    }
+
+    private function uploadDokumenToVercelBlob($field, $ext)
+    {
+        $token = getenv('BLOB_READ_WRITE_TOKEN');
+
+        if (!$token) {
+            die('BLOB_READ_WRITE_TOKEN belum disetting di Vercel.');
+        }
+
+        $storeId = $this->getVercelBlobStoreId($token);
+
+        if (!$storeId) {
+            die('Store ID Vercel Blob tidak ditemukan dari token.');
+        }
+
+        $tmpPath = $_FILES[$field]['tmp_name'];
+
+        if (!is_uploaded_file($tmpPath)) {
+            die('File upload tidak valid: ' . $field);
+        }
+
+        $fileBytes = file_get_contents($tmpPath);
+
+        if ($fileBytes === false) {
+            die('Gagal membaca file upload: ' . $field);
+        }
+
+        $safeField = preg_replace('/[^a-zA-Z0-9_-]/', '', $field);
+        $fileName = uniqid($safeField . '_') . '.' . $ext;
+
+        // Folder virtual di Vercel Blob
+        $pathname = 'dokumen-booking/' . date('Y/m/d') . '/' . $fileName;
+
+        $mimeType = $this->getMimeTypeFromExtension($ext);
+        $endpoint = 'https://vercel.com/api/blob/?pathname=' . rawurlencode($pathname);
+
+        $requestId = $storeId . ':' . time() . ':' . uniqid();
+
+        $headers = [
+            'Authorization: Bearer ' . $token,
+            'x-api-version: 12',
+            'x-vercel-blob-store-id: ' . $storeId,
+            'x-api-blob-request-id: ' . $requestId,
+            'x-vercel-blob-access: public',
+            'x-content-type: ' . $mimeType,
+            'x-add-random-suffix: 0',
+            'x-content-length: ' . strlen($fileBytes),
+            'Content-Type: application/octet-stream',
+            'Content-Length: ' . strlen($fileBytes),
+        ];
+
+        $ch = curl_init($endpoint);
+
+        curl_setopt_array($ch, [
+            CURLOPT_CUSTOMREQUEST  => 'PUT',
+            CURLOPT_POSTFIELDS     => $fileBytes,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT        => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $curlError = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        curl_close($ch);
+
+        if ($response === false) {
+            die('Upload ke Vercel Blob gagal: ' . $curlError);
+        }
+
+        $result = json_decode($response, true);
+
+        if ($httpCode < 200 || $httpCode >= 300 || empty($result['url'])) {
+            die('Upload ke Vercel Blob gagal. HTTP ' . $httpCode . ' - ' . $response);
+        }
+
+        // Yang disimpan ke database adalah URL public dari Vercel Blob
+        return $result['url'];
+    }
+
+    private function getVercelBlobStoreId($token)
+    {
+        // Format token Vercel Blob biasanya mengandung storeId di bagian ke-4
+        // Contoh parsing mengikuti pola SDK Vercel Blob.
+        $parts = explode('_', $token);
+        $storeId = $parts[3] ?? '';
+
+        if (strpos($storeId, 'store_') === 0) {
+            $storeId = substr($storeId, 6);
+        }
+
+        return $storeId;
+    }
+
+    private function getMimeTypeFromExtension($ext)
+    {
+        $mimeTypes = [
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+            'webp' => 'image/webp',
+        ];
+
+        return $mimeTypes[$ext] ?? 'application/octet-stream';
     }
 }
