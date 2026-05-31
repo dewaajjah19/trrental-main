@@ -191,9 +191,10 @@ $timeOptions = [
                                         <div class="form-group">
                                             <label class="form-label">Rent Finish <span class="req">*</span></label>
                                             <div class="input-wrap">
-                                                <i class="fas fa-calendar-check input-icon"></i>
+                                                <i class="fas fa-calendar input-icon"></i>
                                                 <input type="date" name="tgl_kembali" id="tgl_kembali"
-                                                    class="form-control booking-required booking-extra-input" disabled>
+                                                    class="form-control booking-required booking-extra-input"
+                                                    min="<?= date('Y-m-d') ?>" disabled>
                                             </div>
                                         </div>
                                     </div>
@@ -514,6 +515,63 @@ $timeOptions = [
     <script>
         const hargaPerHari = <?= $armada['harga_sewa_perhari'] ?>;
 
+        // ==============================
+        // FILTER PICKUP TIME
+        // Jika tanggal pickup adalah hari ini,
+        // jam yang sudah lewat akan disabled.
+        // ==============================
+        function getTodayValue() {
+            const now = new Date();
+
+            return now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0');
+        }
+
+        function timeToMinutes(time) {
+            const [hour, minute] = time.split(':').map(Number);
+            return (hour * 60) + minute;
+        }
+
+        function filterPickupTime() {
+            const selectedDate = $('#tgl_pinjam').val();
+            const pickupSelect = $('#jam_pengambilan');
+
+            if (!selectedDate || pickupSelect.length === 0) {
+                return;
+            }
+
+            const now = new Date();
+            const today = getTodayValue();
+            const currentMinutes = (now.getHours() * 60) + now.getMinutes();
+
+            pickupSelect.find('option').each(function() {
+                const optionValue = $(this).val();
+
+                // Skip option placeholder
+                if (!optionValue) {
+                    return;
+                }
+
+                // Reset option dulu
+                $(this).prop('disabled', false);
+                $(this).text(optionValue);
+
+                // Jika tanggal pickup adalah hari ini,
+                // disable jam yang sudah lewat / sama dengan jam saat ini
+                if (selectedDate === today && timeToMinutes(optionValue) <= currentMinutes) {
+                    $(this).prop('disabled', true);
+                    $(this).text(optionValue + ' - unavailable');
+                }
+            });
+
+            // Kalau jam yang sedang dipilih ternyata disabled, kosongkan pilihan
+            const selectedOption = pickupSelect.find('option:selected');
+            if (selectedOption.prop('disabled')) {
+                pickupSelect.val('');
+            }
+        }
+
         // Default awal: semua field lanjutan disabled
         $('.booking-extra-input').prop('disabled', true);
         $('.booking-required').prop('required', false);
@@ -531,6 +589,9 @@ $timeOptions = [
             // Enable field lanjutan
             $('.booking-extra-input').prop('disabled', false);
             $('.booking-required').prop('required', true);
+
+            // Terapkan filter jam pickup setelah field aktif
+            filterPickupTime();
 
             // Reset dokumen
             $('.doc-input').prop('required', false).prop('disabled', true).val('');
@@ -584,7 +645,15 @@ $timeOptions = [
 
         $('#tgl_pinjam').on('change', function() {
             $('#tgl_kembali').attr('min', $(this).val());
+
+            // Jika tanggal pickup hari ini, jam yang sudah lewat akan disabled
+            filterPickupTime();
+
             hitungTotal();
+        });
+
+        $('#jam_pengambilan').on('focus click', function() {
+            filterPickupTime();
         });
 
         $('#tgl_kembali').on('change', hitungTotal);
