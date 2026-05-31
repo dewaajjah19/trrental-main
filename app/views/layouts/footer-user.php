@@ -15,9 +15,12 @@
             <!-- Quick Links -->
             <div class="footer-links">
                 <h6>Quick Links</h6>
+
                 <a href="<?= BASE_URL ?>">About Us</a>
+
                 <a href="<?= BASE_URL ?>/home/products">Products</a>
-                <a href="https://www.instagram.com/trrental.bali/?utm_source=ig_web_button_share_sheet"
+
+                <a href="https://wa.me/6281558984828"
                     target="_blank"
                     rel="noopener noreferrer">
                     Contact Us
