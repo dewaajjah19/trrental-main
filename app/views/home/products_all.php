@@ -18,6 +18,8 @@ $icon = $isMobil ? 'fa-car' : 'fa-motorcycle';
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?= BASE_URL ?>/public/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="<?= BASE_URL ?>/public/assets/img/logo.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="<?= BASE_URL ?>/public/assets/img/logo.png?v=2">
     <link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/landingpage/navbar.css?v=1">
     <link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/landingpage/products-all.css?v=1">
     <link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/landingpage/footer.css?v=1">

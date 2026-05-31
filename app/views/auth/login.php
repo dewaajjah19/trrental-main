@@ -15,6 +15,8 @@ if (!function_exists('e')) {
 <html lang="id">
 
 <head>
+    <link rel="icon" type="image/png" href="<?= BASE_URL ?>/public/assets/img/logo.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="<?= BASE_URL ?>/public/assets/img/logo.png?v=2">
     <!-- =====================================================
          META & TITLE
     ====================================================== -->
