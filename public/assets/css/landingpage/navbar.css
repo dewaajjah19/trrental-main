@@ -72,3 +72,25 @@
     outline: none;
     box-shadow: none;
 }
+
+/* =========================
+   NAVBAR LINK COLOR FIX
+========================= */
+.navbar .navbar-nav .nav-link,
+.navbar .navbar-nav .nav-link:visited {
+    color: #222 !important;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.navbar .navbar-nav .nav-link:hover {
+    color: #5E239D !important;
+}
+
+.navbar .navbar-nav .btn-nav-active,
+.navbar .navbar-nav .btn-nav-active:visited {
+    background: #5E239D;
+    color: #fff !important;
+    border-radius: 999px;
+    padding: 12px 28px;
+}
