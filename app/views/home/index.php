@@ -28,7 +28,7 @@
     <section class="hero">
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-6">
+                <div class="col-lg-6 hero-text">
                     <h1>Easy Motorbike & Car Rental in Bali</h1>
                     <p>Rent motorbikes and cars easily and explore Bali with comfort and flexibility, all in one platform. Find the vehicle you need, choose your rental dates, and book in just a few simple steps.</p>
                     <a href="<?= BASE_URL ?>/home/products" class="btn btn-explore">
