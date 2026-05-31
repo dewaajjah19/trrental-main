@@ -31,7 +31,7 @@ $instagramUrl = "https://www.instagram.com/trrental.bali/?utm_source=ig_web_butt
                     </a>
                 </li>
 
-                <li class="nav-item ml-2">
+                <li class="nav-link">
                     <a href="https://wa.me/6281558984828"
                         target="_blank"
                         rel="noopener noreferrer">
