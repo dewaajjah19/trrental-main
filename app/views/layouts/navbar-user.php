@@ -32,8 +32,7 @@ $instagramUrl = "https://www.instagram.com/trrental.bali/?utm_source=ig_web_butt
                 </li>
 
                 <li class="nav-item ml-2">
-                    <a class="nav-link"
-                        href="<?= $instagramUrl ?>"
+                    <a href="https://wa.me/6281558984828"
                         target="_blank"
                         rel="noopener noreferrer">
                         Contact Us
