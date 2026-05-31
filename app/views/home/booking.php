@@ -513,6 +513,44 @@ $timeOptions = [
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // ==============================
+        // FILTER RETURN TIME
+        // Jika tanggal kembali sama dengan tanggal pickup,
+        // jam kembali yang <= jam pickup akan disabled.
+        // ==============================
+        function filterReturnTime() {
+            const startDate = $('#tgl_pinjam').val();
+            const pickupTime = $('#jam_pengambilan').val();
+            const finishDate = $('#tgl_kembali').val();
+            const returnSelect = $('#jam_pengembalian');
+
+            if (!startDate || !pickupTime || !finishDate || returnSelect.length === 0) {
+                return;
+            }
+
+            returnSelect.find('option').each(function() {
+                const optionValue = $(this).val();
+
+                if (!optionValue) {
+                    return;
+                }
+
+                $(this).prop('disabled', false);
+                $(this).text(optionValue);
+
+                if (startDate === finishDate && timeToMinutes(optionValue) <= timeToMinutes(pickupTime)) {
+                    $(this).prop('disabled', true);
+                    $(this).text(optionValue + ' - unavailable');
+                }
+            });
+
+            const selectedOption = returnSelect.find('option:selected');
+
+            if (selectedOption.prop('disabled')) {
+                returnSelect.val('');
+            }
+        }
+
         const hargaPerHari = <?= $armada['harga_sewa_perhari'] ?>;
 
         // ==============================
@@ -621,18 +659,21 @@ $timeOptions = [
         // Hitung Total
         function hitungTotal() {
             const startValue = $('#tgl_pinjam').val();
+            const pickupTime = $('#jam_pengambilan').val();
             const finishValue = $('#tgl_kembali').val();
+            const returnTime = $('#jam_pengembalian').val();
 
-            if (!startValue || !finishValue) {
+            if (!startValue || !pickupTime || !finishValue || !returnTime) {
                 $('#totalPreview').fadeOut();
                 return;
             }
 
-            const p = new Date(startValue);
-            const k = new Date(finishValue);
+            const startDateTime = new Date(startValue + 'T' + pickupTime + ':00');
+            const finishDateTime = new Date(finishValue + 'T' + returnTime + ':00');
 
-            if (k > p) {
-                const hari = Math.round((k - p) / 86400000);
+            if (finishDateTime > startDateTime) {
+                const durasiMs = finishDateTime - startDateTime;
+                const hari = Math.max(1, Math.ceil(durasiMs / 86400000));
                 const total = hari * hargaPerHari;
 
                 $('#totalAmount').text('Rp ' + total.toLocaleString('id-ID'));
@@ -644,19 +685,57 @@ $timeOptions = [
         }
 
         $('#tgl_pinjam').on('change', function() {
-            $('#tgl_kembali').attr('min', $(this).val());
+            const startDate = $(this).val();
+            const finishDate = $('#tgl_kembali').val();
 
-            // Jika tanggal pickup hari ini, jam yang sudah lewat akan disabled
+            $('#tgl_kembali').attr('min', startDate);
+
+            // Kalau tanggal kembali lebih kecil dari tanggal pinjam, kosongkan
+            if (finishDate && finishDate < startDate) {
+                $('#tgl_kembali').val('');
+                $('#jam_pengembalian').val('');
+            }
+
             filterPickupTime();
-
+            filterReturnTime();
             hitungTotal();
         });
 
-        $('#jam_pengambilan').on('focus click', function() {
+        $('#jam_pengambilan').on('change focus click', function() {
             filterPickupTime();
+            filterReturnTime();
+            hitungTotal();
         });
 
-        $('#tgl_kembali').on('change', hitungTotal);
+        $('#tgl_kembali').on('change', function() {
+            filterReturnTime();
+            hitungTotal();
+        });
+
+        $('#jam_pengembalian').on('change focus click', function() {
+            filterReturnTime();
+            hitungTotal();
+        });
+
+        $('#bookingForm').on('submit', function(e) {
+            const startValue = $('#tgl_pinjam').val();
+            const pickupTime = $('#jam_pengambilan').val();
+            const finishValue = $('#tgl_kembali').val();
+            const returnTime = $('#jam_pengembalian').val();
+
+            if (!startValue || !pickupTime || !finishValue || !returnTime) {
+                return;
+            }
+
+            const startDateTime = new Date(startValue + 'T' + pickupTime + ':00');
+            const finishDateTime = new Date(finishValue + 'T' + returnTime + ':00');
+
+            if (finishDateTime <= startDateTime) {
+                e.preventDefault();
+                alert('Return date and time must be greater than pickup date and time.');
+                return false;
+            }
+        });
 
         // Toggle Pickup
         function togglePickup(el) {

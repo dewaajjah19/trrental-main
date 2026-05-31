@@ -97,12 +97,28 @@ class HomeController extends Controller
                 die('Data booking belum lengkap.');
             }
 
-            // Pastikan tanggal kembali lebih besar dari tanggal pinjam
-            $jumlah_hari = (int)((strtotime($tgl_kembali) - strtotime($tgl_pinjam)) / 86400);
+            // ==============================
+            // VALIDASI JADWAL RENTAL
+            // Menggunakan tanggal + jam agar booking di hari yang sama tetap valid,
+            // selama jam kembali lebih besar dari jam pickup.
+            // ==============================
+            $startDateTime = DateTime::createFromFormat('Y-m-d H:i', $tgl_pinjam . ' ' . $jam_pengambilan);
+            $finishDateTime = DateTime::createFromFormat('Y-m-d H:i', $tgl_kembali . ' ' . $jam_pengembalian);
 
-            if ($jumlah_hari <= 0) {
-                die('Tanggal kembali harus lebih besar dari tanggal pinjam.');
+            if (!$startDateTime || !$finishDateTime) {
+                die('Format tanggal atau jam tidak valid.');
             }
+
+            if ($finishDateTime <= $startDateTime) {
+                die('Tanggal dan jam kembali harus lebih besar dari tanggal dan jam pinjam.');
+            }
+
+            // Hitung durasi rental berdasarkan tanggal + jam
+            $durasiDetik = $finishDateTime->getTimestamp() - $startDateTime->getTimestamp();
+
+            // Rental harian: durasi valid minimal dihitung 1 hari.
+            // Kalau lebih dari 24 jam, dibulatkan ke atas.
+            $jumlah_hari = max(1, (int) ceil($durasiDetik / 86400));
 
             $total_bayar = $jumlah_hari * (int)$armada['harga_sewa_perhari'];
 
