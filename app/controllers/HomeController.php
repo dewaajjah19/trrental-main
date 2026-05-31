@@ -389,7 +389,7 @@ class HomeController extends Controller
         $curlError = curl_error($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        curl_close($ch);
+        $ch = null;
 
         if ($response === false) {
             die('Upload ke Vercel Blob gagal: ' . $curlError);
