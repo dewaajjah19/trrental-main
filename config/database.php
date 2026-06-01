@@ -1,5 +1,11 @@
 <?php
 
+// =====================================================
+// SET TIMEZONE APLIKASI
+// Digunakan agar waktu yang diproses PHP mengikuti waktu Bali/WITA.
+// =====================================================
+date_default_timezone_set('Asia/Makassar');
+
 function getDB()
 {
     $host = getenv('DB_HOST') ?: 'localhost';
@@ -15,6 +21,13 @@ function getDB()
     }
 
     $conn->set_charset("utf8mb4");
+
+    // =====================================================
+    // SET TIMEZONE DATABASE SESSION KE WITA
+    // Penting untuk Railway/Vercel karena default server biasanya UTC.
+    // Dengan ini, NOW() di MySQL akan mengikuti waktu Bali/WITA.
+    // =====================================================
+    $conn->query("SET time_zone = '+08:00'");
 
     return $conn;
 }
