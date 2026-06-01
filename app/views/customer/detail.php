@@ -22,31 +22,99 @@ if (!function_exists('e')) {
 }
 
 // =====================================================
+// HELPER: URL DOKUMEN CUSTOMER
+// Fungsi ini digunakan agar halaman customer/detail bisa membaca
+// 2 jenis sumber dokumen:
+//
+// 1. Localhost:
+//    Isi database hanya nama file, contoh:
+//    foto_ktp_xxxxx.jpg
+//    Maka URL akan diarahkan ke:
+//    /public/assets/img/dokumen/foto_ktp_xxxxx.jpg
+//
+// 2. Vercel Blob:
+//    Isi database sudah berupa URL lengkap, contoh:
+//    https://xxxxx.public.blob.vercel-storage.com/...
+//    Maka URL langsung dipakai tanpa ditambah BASE_URL.
+//
+// Ini memperbaiki error 404 di Vercel yang sebelumnya terjadi karena
+// URL Blob malah ditambah path lokal public/assets/img/dokumen.
+// =====================================================
+if (!function_exists('customerDokumenUrl')) {
+    function customerDokumenUrl($file)
+    {
+        if (empty($file)) {
+            return '';
+        }
+
+        // Kalau file sudah berupa URL, berarti dokumen berasal dari Vercel Blob.
+        if (preg_match('/^https?:\/\//i', $file)) {
+            return $file;
+        }
+
+        // Kalau bukan URL, berarti file berasal dari folder lokal localhost.
+        return BASE_URL . '/public/assets/img/dokumen/' . rawurlencode($file);
+    }
+}
+
+// =====================================================
+// HELPER: NAMA DOKUMEN CUSTOMER
+// Fungsi ini digunakan untuk menampilkan nama file yang lebih rapi.
+//
+// Jika file dari localhost:
+//    tampilkan nama file asli.
+//
+// Jika file dari Vercel Blob:
+//    ambil nama file terakhir dari URL saja,
+//    supaya halaman admin tidak menampilkan URL panjang.
+// =====================================================
+if (!function_exists('customerDokumenName')) {
+    function customerDokumenName($file)
+    {
+        if (empty($file)) {
+            return '-';
+        }
+
+        // Kalau file berupa URL Blob, ambil nama file dari path URL.
+        if (preg_match('/^https?:\/\//i', $file)) {
+            $path = parse_url($file, PHP_URL_PATH);
+            return basename($path);
+        }
+
+        return $file;
+    }
+}
+
+// =====================================================
 // HELPER: FORMAT STATUS BOOKING
 // Mengubah status database menjadi label dan warna badge.
 // =====================================================
-function customerStatusBadgeClass($status)
-{
-    return match ($status) {
-        'menunggu'     => 'badge-menunggu',
-        'dikonfirmasi' => 'badge-dikonfirmasi',
-        'disewa'       => 'badge-disewa',
-        'selesai'      => 'badge-selesai',
-        'dibatalkan'   => 'badge-dibatalkan',
-        default        => 'badge-menunggu'
-    };
+if (!function_exists('customerStatusBadgeClass')) {
+    function customerStatusBadgeClass($status)
+    {
+        return match ($status) {
+            'menunggu'     => 'badge-menunggu',
+            'dikonfirmasi' => 'badge-dikonfirmasi',
+            'disewa'       => 'badge-disewa',
+            'selesai'      => 'badge-selesai',
+            'dibatalkan'   => 'badge-dibatalkan',
+            default        => 'badge-menunggu'
+        };
+    }
 }
 
-function customerStatusBadgeLabel($status)
-{
-    return match ($status) {
-        'menunggu'     => 'Menunggu',
-        'dikonfirmasi' => 'Dikonfirmasi',
-        'disewa'       => 'On Progress',
-        'selesai'      => 'Done',
-        'dibatalkan'   => 'Dibatalkan',
-        default        => '-'
-    };
+if (!function_exists('customerStatusBadgeLabel')) {
+    function customerStatusBadgeLabel($status)
+    {
+        return match ($status) {
+            'menunggu'     => 'Menunggu',
+            'dikonfirmasi' => 'Dikonfirmasi',
+            'disewa'       => 'On Progress',
+            'selesai'      => 'Done',
+            'dibatalkan'   => 'Dibatalkan',
+            default        => '-'
+        };
+    }
 }
 
 // =====================================================
@@ -226,6 +294,10 @@ $customerTypeLabel = $isForeignCustomer ? 'Foreign Citizen' : 'Indonesian Citize
          SECTION DOKUMEN DARI BOOKING TERAKHIR
          WNI: Identity Card
          WNA: Driving License, Identity/Passport, Flight Ticket, Hotel Booking
+
+         Catatan fix:
+         Bagian ini sekarang memakai customerDokumenUrl() dan customerDokumenName().
+         Tujuannya agar dokumen dari localhost dan Vercel Blob sama-sama bisa tampil.
     ================================================== -->
     <?php if ($lastBooking): ?>
 
@@ -265,7 +337,19 @@ $customerTypeLabel = $isForeignCustomer ? 'Foreign Citizen' : 'Indonesian Citize
         ?>
 
         <?php foreach ($docs as $doc): ?>
-            <?php if (empty($doc['file'])) continue; ?>
+            <?php
+            if (empty($doc['file'])) {
+                continue;
+            }
+
+            // URL dokumen yang akan dipakai untuk preview gambar dan tombol lihat.
+            // Bisa berupa URL Blob atau URL file lokal.
+            $docUrl = customerDokumenUrl($doc['file']);
+
+            // Nama dokumen yang ditampilkan di card.
+            // Kalau Blob URL, yang tampil hanya nama file terakhir agar tidak terlalu panjang.
+            $docName = customerDokumenName($doc['file']);
+            ?>
 
             <!-- Card Dokumen -->
             <div class="col-md-4 mb-4">
@@ -298,16 +382,16 @@ $customerTypeLabel = $isForeignCustomer ? 'Foreign Citizen' : 'Indonesian Citize
                     </p>
 
                     <!-- Preview Dokumen -->
-                    <img src="<?= BASE_URL ?>/public/assets/img/dokumen/<?= e($doc['file']) ?>"
+                    <img src="<?= e($docUrl) ?>"
                         style="width:100%; height:130px; object-fit:cover; border-radius:10px; margin-bottom:10px">
 
                     <!-- Nama File -->
                     <div class="small text-muted mb-3" style="word-break:break-word;">
-                        <?= e($doc['file']) ?>
+                        <?= e($docName) ?>
                     </div>
 
                     <!-- Tombol Lihat Dokumen -->
-                    <a href="<?= BASE_URL ?>/public/assets/img/dokumen/<?= e($doc['file']) ?>"
+                    <a href="<?= e($docUrl) ?>"
                         target="_blank"
                         class="btn btn-purple btn-sm w-100">
                         <i class="fas fa-eye mr-1"></i> Lihat Dokumen

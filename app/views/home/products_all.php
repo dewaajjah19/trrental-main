@@ -58,14 +58,7 @@ $icon = $isMobil ? 'fa-car' : 'fa-motorcycle';
                 <?php else: ?>
                     <?php foreach ($armada as $a): ?>
                         <div class="col-lg-4 col-md-6 vehicle-item"
-                            data-search="<?= strtolower(
-                                                $a['nama_armada'] . ' ' .
-                                                    $a['merk_armada'] . ' ' .
-                                                    $a['tipe_armada'] . ' ' .
-                                                    $a['jenis_armada'] . ' ' .
-                                                    $a['harga_sewa_perhari'] . ' ' .
-                                                    number_format($a['harga_sewa_perhari'], 0, ',', '.')
-                                            ) ?>">
+                            data-search="<?= htmlspecialchars(strtolower($a['nama_armada'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
 
                             <div class="vehicle-card" onclick="window.location='<?= BASE_URL ?>/home/booking/<?= $a['id_armada'] ?>'">
                                 <div class="vehicle-img-wrap">

@@ -260,6 +260,22 @@ ob_start();
             <!-- Detail Booking -->
             <table class="table table-borderless mb-0">
 
+                <!-- Waktu Pesanan Dibuat -->
+                <tr style="border-top:1px solid #f5f5f5">
+                    <td style="color:#888; font-size:.88rem; padding:10px 0">Booking Created</td>
+                    <td style="font-weight:700; font-size:.92rem; padding:10px 0; text-align:right">
+                        <?php if (!empty($booking['created_at'])): ?>
+                            <?= date('d F Y', strtotime($booking['created_at'])) ?>
+                            <br>
+                            <small class="text-muted">
+                                <?= date('H:i', strtotime($booking['created_at'])) ?> WITA
+                            </small>
+                        <?php else: ?>
+                            -
+                        <?php endif; ?>
+                    </td>
+                </tr>
+
                 <!-- Nama Armada -->
                 <tr style="border-top:1px solid #f5f5f5">
                     <td style="color:#888; font-size:.88rem; padding:10px 0">Type of Vehicle</td>
@@ -276,7 +292,7 @@ ob_start();
                         <?php if (!empty($booking['jam_pengambilan'])): ?>
                             <br>
                             <small class="text-muted">
-                                <?= date('H:i', strtotime($booking['jam_pengambilan'])) ?>
+                                <?= date('H:i', strtotime($booking['jam_pengambilan'])) ?> WITA
                             </small>
                         <?php endif; ?>
                     </td>
@@ -290,7 +306,7 @@ ob_start();
                         <?php if (!empty($booking['jam_pengembalian'])): ?>
                             <br>
                             <small class="text-muted">
-                                <?= date('H:i', strtotime($booking['jam_pengembalian'])) ?>
+                                <?= date('H:i', strtotime($booking['jam_pengembalian'])) ?> WITA
                             </small>
                         <?php endif; ?>
                     </td>

@@ -65,7 +65,7 @@ function getCustomerTypeLabel($type)
 
 <!-- =====================================================
      SECTION FILTER LAPORAN
-     Digunakan untuk memfilter data berdasarkan tanggal, tahun grafik, dan kegiatan
+     Digunakan untuk memfilter data berdasarkan tanggal dan tahun grafik
 ===================================================== -->
 <div class="table-card mb-4">
     <h6 class="font-weight-700 mb-3" style="font-weight:700">Filter Laporan</h6>
@@ -74,7 +74,7 @@ function getCustomerTypeLabel($type)
         <div class="row align-items-end">
 
             <!-- Filter Tanggal Awal -->
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="small font-weight-600">Tanggal Awal</label>
                 <input type="date"
                     name="tgl_awal"
@@ -83,7 +83,7 @@ function getCustomerTypeLabel($type)
             </div>
 
             <!-- Filter Tanggal Akhir -->
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="small font-weight-600">Tanggal Akhir</label>
                 <input type="date"
                     name="tgl_akhir"
@@ -102,37 +102,22 @@ function getCustomerTypeLabel($type)
                     max="2030">
             </div>
 
-            <!-- Filter Kegiatan -->
-            <div class="col-md-4">
-                <label class="small font-weight-600 d-block">Kegiatan</label>
-
-                <div class="btn-group" role="group">
-                    <?php foreach (['semua' => 'Semua', 'penyewaan' => 'Penyewaan', 'pendapatan' => 'Pendapatan'] as $val => $label): ?>
-                        <button type="submit"
-                            name="kegiatan"
-                            value="<?= e($val) ?>"
-                            class="btn btn-sm <?= ($filter['kegiatan'] ?? 'semua') === $val ? 'btn-purple' : 'btn-outline-secondary' ?>">
-                            <?= e($label) ?>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
             <!-- Tombol Terapkan dan Reset -->
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-purple btn-sm mr-2">
-                    <i class="fas fa-filter"></i> Terapkan
-                </button>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center" style="gap:8px;">
+                    <button type="submit" class="btn btn-purple btn-sm">
+                        <i class="fas fa-filter mr-1"></i> Terapkan
+                    </button>
 
-                <a href="<?= BASE_URL ?>/laporan" class="btn btn-sm btn-outline-secondary">
-                    Reset
-                </a>
+                    <a href="<?= BASE_URL ?>/laporan" class="btn btn-sm btn-outline-secondary">
+                        Reset
+                    </a>
+                </div>
             </div>
 
         </div>
     </form>
 </div>
-
 
 <!-- =====================================================
      SECTION RINGKASAN STATISTIK
@@ -263,6 +248,7 @@ function getCustomerTypeLabel($type)
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Waktu Pesan</th>
                     <th>Customer</th>
                     <th>Armada</th>
                     <th>Tipe</th>
@@ -287,6 +273,18 @@ function getCustomerTypeLabel($type)
                     <tr>
                         <!-- ID Booking -->
                         <td><?= str_pad($b['id_booking'], 3, '0', STR_PAD_LEFT) ?></td>
+
+                        <!-- Waktu Pesan / Booking Created -->
+                        <td>
+                            <?php if (!empty($b['created_at'])): ?>
+                                <strong><?= date('d M Y', strtotime($b['created_at'])) ?></strong><br>
+                                <small class="text-muted">
+                                    <?= date('H:i', strtotime($b['created_at'])) ?> WITA
+                                </small>
+                            <?php else: ?>
+                                <span class="text-muted">-</span>
+                            <?php endif; ?>
+                        </td>
 
                         <!-- Nama Customer -->
                         <td><?= e($b['nama_cust']) ?></td>
@@ -340,7 +338,7 @@ function getCustomerTypeLabel($type)
 
                 <?php if (empty($bookings)): ?>
                     <tr>
-                        <td colspan="12" class="text-center text-muted">
+                        <td colspan="13" class="text-center text-muted">
                             Belum ada data booking.
                         </td>
                     </tr>
@@ -447,25 +445,26 @@ $(document).ready(function(){
     // Mengambil semua data dari DataTables, bukan hanya halaman pagination aktif
     // =====================================================
     function getExportRows() {
-        const rows = [];
+    const rows = [];
 
         laporanDataTable.rows({ search: 'applied' }).every(function(){
             const rowNode = this.node();
             const cells = rowNode.querySelectorAll('td');
 
-            if (cells.length < 12) return;
+            if (cells.length < 13) return;
 
             rows.push([
                 cells[0].innerText.trim(),   // ID
-                cells[1].innerText.trim(),   // Customer
-                cells[2].innerText.trim(),   // Armada
-                cells[3].innerText.trim(),   // Tipe Customer
-                cells[4].innerText.trim(),   // Tgl Pinjam
-                cells[5].innerText.trim(),   // Jam Ambil
-                cells[7].innerText.trim(),   // Tgl Kembali
-                cells[8].innerText.trim(),   // Jam Kembali
-                cells[9].innerText.trim(),   // Total
-                cells[10].innerText.trim()   // Status
+                cells[1].innerText.trim(),   // Waktu Pesan
+                cells[2].innerText.trim(),   // Customer
+                cells[3].innerText.trim(),   // Armada
+                cells[4].innerText.trim(),   // Tipe Customer
+                cells[5].innerText.trim(),   // Tgl Pinjam
+                cells[6].innerText.trim(),   // Jam Ambil
+                cells[8].innerText.trim(),   // Tgl Kembali
+                cells[9].innerText.trim(),   // Jam Kembali
+                cells[10].innerText.trim(),  // Total
+                cells[11].innerText.trim()   // Status
             ]);
         });
 
@@ -487,6 +486,7 @@ $(document).ready(function(){
         const worksheetData = [
             [
                 "ID",
+                "Waktu Pesan",
                 "Customer",
                 "Armada",
                 "Tipe Customer",
@@ -533,6 +533,7 @@ $(document).ready(function(){
             startY: 35,
             head: [[
                 "ID",
+                "Waktu Pesan",
                 "Customer",
                 "Armada",
                 "Tipe",

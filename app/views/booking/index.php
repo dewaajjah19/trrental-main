@@ -54,24 +54,57 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Waktu Pesan</th>
                     <th>Customer</th>
                     <th>Armada</th>
                     <th>Tgl/Waktu Pinjam</th>
                     <th></th>
                     <th>Tgl/Waktu Kembali</th>
                     <th>Status</th>
-                    <th>Aksi</th>
+                    <th style="white-space: nowrap;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($bookings as $i => $b): ?>
                     <tr>
                         <td><?= str_pad($b['id_booking'], 3, '0', STR_PAD_LEFT) ?></td>
+
+                        <td>
+                            <?php if (!empty($b['created_at'])): ?>
+                                <strong><?= date('d M Y', strtotime($b['created_at'])) ?></strong><br>
+                                <small class="text-muted">
+                                    <?= date('H:i', strtotime($b['created_at'])) ?> WITA
+                                </small>
+                            <?php else: ?>
+                                <span class="text-muted">-</span>
+                            <?php endif; ?>
+                        </td>
+
                         <td><?= $b['nama_cust'] ?></td>
                         <td><?= $b['nama_armada'] ?></td>
-                        <td><?= date('d F Y', strtotime($b['tgl_pinjam'])) ?></td>
+
+                        <td>
+                            <?= date('d F Y', strtotime($b['tgl_pinjam'])) ?>
+                            <?php if (!empty($b['jam_pengambilan'])): ?>
+                                <br>
+                                <small class="text-muted">
+                                    <?= date('H:i', strtotime($b['jam_pengambilan'])) ?> WITA
+                                </small>
+                            <?php endif; ?>
+                        </td>
+
                         <td><i class="fas fa-arrow-right text-muted"></i></td>
-                        <td><?= date('d F Y', strtotime($b['tgl_kembali'])) ?></td>
+
+                        <td>
+                            <?= date('d F Y', strtotime($b['tgl_kembali'])) ?>
+                            <?php if (!empty($b['jam_pengembalian'])): ?>
+                                <br>
+                                <small class="text-muted">
+                                    <?= date('H:i', strtotime($b['jam_pengembalian'])) ?> WITA
+                                </small>
+                            <?php endif; ?>
+                        </td>
+
                         <td>
                             <?php
                             $badgeClass = match ($b['status_booking']) {
@@ -82,6 +115,7 @@
                                 'dibatalkan'   => 'badge-dibatalkan',
                                 default        => 'badge-menunggu'
                             };
+
                             $badgeLabel = match ($b['status_booking']) {
                                 'menunggu'     => 'Menunggu',
                                 'dikonfirmasi' => 'Dikonfirmasi',
@@ -93,10 +127,11 @@
                             ?>
                             <span class="status-badge <?= $badgeClass ?>"><?= $badgeLabel ?></span>
                         </td>
-                        <td>
+
+                        <td style="white-space: nowrap;">
                             <a href="<?= BASE_URL ?>/booking/detail/<?= $b['id_booking'] ?>"
                                 class="btn-detail">
-                                <i class="fas fa-eye mr-1"></i> Detail
+                                <i class="fas fa-eye"></i> Detail
                             </a>
                         </td>
                     </tr>

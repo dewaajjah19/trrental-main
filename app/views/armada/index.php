@@ -165,19 +165,36 @@ function armadaStatusLabel($status)
                             </td>
 
                             <!-- Tombol Aksi -->
-                            <td>
-                                <a href="<?= BASE_URL ?>/armada/edit/<?= e($a['id_armada']) ?>"
-                                    class="btn btn-warning btn-sm"
-                                    title="Edit Armada">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                            <td style="white-space: nowrap;">
+                                <?php if (($a['status_armada'] ?? '') === 'disewa'): ?>
 
-                                <a href="javascript:void(0)"
-                                    class="btn btn-danger btn-sm"
-                                    title="Hapus Armada"
-                                    onclick="confirmDelete('<?= BASE_URL ?>/armada/delete/<?= e($a['id_armada']) ?>', '<?= e($a['nama_armada']) ?>')">
-                                    <i class="fas fa-trash"></i>
-                                </a>
+                                    <button type="button"
+                                        class="btn btn-secondary btn-sm"
+                                        title="Armada sedang disewa, tidak dapat diedit"
+                                        disabled>
+                                        <i class="fas fa-lock"></i>
+                                    </button>
+
+                                    <small class="text-muted d-block mt-1">
+                                        Sedang disewa
+                                    </small>
+
+                                <?php else: ?>
+
+                                    <a href="<?= BASE_URL ?>/armada/edit/<?= e($a['id_armada']) ?>"
+                                        class="btn btn-warning btn-sm"
+                                        title="Edit Armada">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <a href="javascript:void(0)"
+                                        class="btn btn-danger btn-sm"
+                                        title="Hapus Armada"
+                                        onclick="confirmDelete('<?= BASE_URL ?>/armada/delete/<?= e($a['id_armada']) ?>', '<?= e($a['nama_armada']) ?>')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

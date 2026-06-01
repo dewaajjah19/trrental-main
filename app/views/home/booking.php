@@ -157,6 +157,41 @@ $timeOptions = [
                             </div>
 
                             <div class="form-section-body">
+                                <div class="schedule-policy-note mb-3" style="
+                                        background:#F3EEFF;
+                                        border:1px solid #D8C8FF;
+                                        border-left:5px solid #5B2D8E;
+                                        border-radius:12px;
+                                        padding:12px 14px;
+                                        color:#3D2566;
+                                        font-size:.88rem;
+                                        line-height:1.55;
+                                    ">
+                                    <div style="display:flex; align-items:flex-start; gap:10px;">
+                                        <div style="
+                                                width:30px;
+                                                height:30px;
+                                                min-width:30px;
+                                                border-radius:50%;
+                                                background:#5B2D8E;
+                                                color:#fff;
+                                                display:flex;
+                                                align-items:center;
+                                                justify-content:center;
+                                                font-size:.9rem;
+                                                margin-top:2px;
+                                            ">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+
+                                        <div>
+                                            <strong>Rental Schedule Policy</strong><br>
+                                            Pickup or delivery time is only available at least <strong>2 hours after booking</strong>.
+                                            If a time option cannot be selected, it means the time is no longer available.
+                                            Return time must be later than the selected pickup time.
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="row">
 
                                     <div class="col-md-6">
@@ -444,9 +479,49 @@ $timeOptions = [
                             </div>
                         </div>
 
+
                         <!-- Notes -->
                         <div class="notes-box mb-4">
-                            <h6><i class="fas fa-info-circle"></i> Important Notes</h6>
+                            <h6><i class="fas fa-exclamation-circle"></i> Important Notes</h6>
+
+                            <!-- Highlight ID Card Retention Policy -->
+                            <div class="id-card-warning mb-3" style="
+                                    background:#FFF4E5;
+                                    border:1.5px solid #F5B041;
+                                    border-left:6px solid #E67E22;
+                                    border-radius:12px;
+                                    padding:14px 16px;
+                                    color:#4A2C00;
+                                ">
+                                <div style="display:flex; align-items:flex-start; gap:12px;">
+                                    <div style="
+                                        width:34px;
+                                        height:34px;
+                                        min-width:34px;
+                                        border-radius:50%;
+                                        background:#E67E22;
+                                        color:#fff;
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:center;
+                                        font-size:1rem;
+                                        margin-top:2px;
+                                    ">
+                                        <i class="fas fa-id-card"></i>
+                                    </div>
+
+                                    <div>
+                                        <div style="font-weight:800; font-size:.95rem; margin-bottom:4px;">
+                                            ID Card / KTP Retention Policy
+                                        </div>
+                                        <div style="font-size:.88rem; line-height:1.55;">
+                                            The customer's original <strong>ID Card/KTP may be held during the rental period</strong>
+                                            and will be returned after the <strong>vehicle is returned in good condition</strong>.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <ul>
                                 <li>All customers are required to make a deposit as a guarantee.</li>
                                 <li>For cars, the deposit is <strong>$130 (2 million IDR)</strong>. It will be refunded once the car is returned.</li>
@@ -552,6 +627,7 @@ $timeOptions = [
         }
 
         const hargaPerHari = <?= $armada['harga_sewa_perhari'] ?>;
+        const MIN_PICKUP_HOURS = 2;
 
         // ==============================
         // FILTER PICKUP TIME
@@ -580,14 +656,29 @@ $timeOptions = [
             }
 
             const now = new Date();
-            const today = getTodayValue();
-            const currentMinutes = (now.getHours() * 60) + now.getMinutes();
+
+            // Minimal pickup = waktu sekarang + 2 jam
+            const minPickupDateTime = new Date(
+                now.getTime() + (MIN_PICKUP_HOURS * 60 * 60 * 1000)
+            );
+
+            const minPickupDate =
+                minPickupDateTime.getFullYear() + '-' +
+                String(minPickupDateTime.getMonth() + 1).padStart(2, '0') + '-' +
+                String(minPickupDateTime.getDate()).padStart(2, '0');
+
+            const minPickupMinutes =
+                (minPickupDateTime.getHours() * 60) + minPickupDateTime.getMinutes();
+
+            let availableCount = 0;
 
             pickupSelect.find('option').each(function() {
                 const optionValue = $(this).val();
 
-                // Skip option placeholder
+                // Placeholder
                 if (!optionValue) {
+                    $(this).prop('disabled', false);
+                    $(this).text('Select pickup time');
                     return;
                 }
 
@@ -595,11 +686,23 @@ $timeOptions = [
                 $(this).prop('disabled', false);
                 $(this).text(optionValue);
 
-                // Jika tanggal pickup adalah hari ini,
-                // disable jam yang sudah lewat / sama dengan jam saat ini
-                if (selectedDate === today && timeToMinutes(optionValue) <= currentMinutes) {
+                const optionMinutes = timeToMinutes(optionValue);
+
+                /**
+                 * Logic:
+                 * - Kalau tanggal pickup lebih kecil dari tanggal minimal pickup, disable semua.
+                 * - Kalau tanggal pickup sama dengan tanggal minimal pickup,
+                 *   disable jam yang lebih kecil dari sekarang + 2 jam.
+                 * - Kalau tanggal pickup setelah tanggal minimal pickup, semua jam tersedia.
+                 */
+                if (selectedDate < minPickupDate) {
                     $(this).prop('disabled', true);
                     $(this).text(optionValue + ' - unavailable');
+                } else if (selectedDate === minPickupDate && optionMinutes < minPickupMinutes) {
+                    $(this).prop('disabled', true);
+                    $(this).text(optionValue + ' - unavailable');
+                } else {
+                    availableCount++;
                 }
             });
 
@@ -607,6 +710,12 @@ $timeOptions = [
             const selectedOption = pickupSelect.find('option:selected');
             if (selectedOption.prop('disabled')) {
                 pickupSelect.val('');
+            }
+
+            // Kalau hari ini sudah tidak ada jam tersedia
+            if (availableCount === 0) {
+                pickupSelect.val('');
+                pickupSelect.find('option[value=""]').text('No pickup time available today');
             }
         }
 

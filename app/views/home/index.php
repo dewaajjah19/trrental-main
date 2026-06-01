@@ -175,32 +175,35 @@
     </section>
 
     <!-- Reviews -->
-    <section class="reviews-section">
-        <div class="container">
-            <h2>Customer Reviews</h2>
-            <div class="col-lg-8 mx-auto px-0">
-                <div class="review-box">
-                    <button class="btn-write-review">Write Review</button>
-                    <div class="clearfix"></div>
-                    <div class="review-item">
-                        <div class="stars">★★★★★</div>
-                        <div class="review-text">"Very easy booking and the motorbike was in great condition."</div>
-                        <div class="review-author">— Daniel, Australia</div>
-                    </div>
-                    <div class="review-item">
-                        <div class="stars">★★★★★</div>
-                        <div class="review-text">"Very easy booking and the motorbike was in great condition."</div>
-                        <div class="review-author">— Daniel, Australia</div>
-                    </div>
-                    <div class="review-item">
-                        <div class="stars">★★★★★</div>
-                        <div class="review-text">"Very easy booking and the motorbike was in great condition."</div>
-                        <div class="review-author">— Daniel, Australia</div>
+    <!-- dihide dulu ya bege -->
+    <?php if (false): ?>
+        <section class="reviews-section">
+            <div class="container">
+                <h2>Customer Reviews</h2>
+                <div class="col-lg-8 mx-auto px-0">
+                    <div class="review-box">
+                        <button class="btn-write-review">Write Review</button>
+                        <div class="clearfix"></div>
+                        <div class="review-item">
+                            <div class="stars">★★★★★</div>
+                            <div class="review-text">"Very easy booking and the motorbike was in great condition."</div>
+                            <div class="review-author">— Daniel, Australia</div>
+                        </div>
+                        <div class="review-item">
+                            <div class="stars">★★★★★</div>
+                            <div class="review-text">"Very easy booking and the motorbike was in great condition."</div>
+                            <div class="review-author">— Daniel, Australia</div>
+                        </div>
+                        <div class="review-item">
+                            <div class="stars">★★★★★</div>
+                            <div class="review-text">"Very easy booking and the motorbike was in great condition."</div>
+                            <div class="review-author">— Daniel, Australia</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    <?php endif; ?>
 
     <!-- Footer -->
     <?php require_once BASE_PATH . '/app/views/layouts/footer-user.php'; ?>

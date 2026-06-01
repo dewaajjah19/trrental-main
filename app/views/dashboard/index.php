@@ -270,9 +270,10 @@ function dashboardStatusLabel($status)
 
                             <!-- Tombol Detail -->
                             <td>
-                                <a href="<?= BASE_URL ?>/booking/detail/<?= e($b['id_booking']) ?>"
-                                    class="btn btn-sm btn-purple">
-                                    <i class="fas fa-eye mr-1"></i> Detail
+                                <a href="<?= BASE_URL ?>/booking/detail/<?= $b['id_booking'] ?>"
+                                    class="btn-detail">
+                                    <i class="fas fa-eye"></i>
+                                    <span>Detail</span>
                                 </a>
                             </td>
 

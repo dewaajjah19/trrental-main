@@ -62,6 +62,12 @@ $customerType = ($booking['tipe_customer'] ?? 'WNI') === 'WNA'
                 <div class="invoice-title-box">
                     <h1>INVOICE</h1>
                     <p>#<?= $bookingNumber ?></p>
+
+                    <?php if (!empty($booking['created_at'])): ?>
+                        <small style="display:block; margin-top:6px; font-size:.82rem; color:#777;">
+                            Created: <?= date('d F Y, H:i', strtotime($booking['created_at'])) ?> WITA
+                        </small>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -162,12 +168,48 @@ $customerType = ($booking['tipe_customer'] ?? 'WNI') === 'WNA'
                         <td>Status</td>
                         <td><?= ucfirst($booking['status_booking']) ?></td>
                     </tr>
+
+                    <?php if (!empty($booking['created_at'])): ?>
+                        <tr>
+                            <td>Booking Created</td>
+                            <td><?= date('d F Y, H:i', strtotime($booking['created_at'])) ?> WITA</td>
+                        </tr>
+                    <?php endif; ?>
                 </table>
             </div>
 
             <div class="invoice-total">
                 <span>Total Payment</span>
                 <strong>Rp <?= number_format($booking['total_bayar'], 0, ',', '.') ?></strong>
+            </div>
+
+            <!-- Important Rental Terms -->
+            <div class="invoice-id-card-policy" style="
+                    margin-top:24px;
+                    padding:16px 18px;
+                    border:1px solid #F5B041;
+                    border-left:6px solid #E67E22;
+                    border-radius:12px;
+                    background:#FFF8EC;
+                    color:#4A2C00;
+                ">
+                <div style="font-weight:800; font-size:1rem; margin-bottom:8px;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Important Rental Terms
+                </div>
+
+                <ul style="margin:0; padding-left:20px; font-size:.9rem; line-height:1.7;">
+                    <li>
+                        Please bring your original <strong>ID Card/KTP</strong> during pickup or delivery.
+                    </li>
+                    <li>
+                        The customer's original <strong>ID Card/KTP will be temporarily held during the rental period</strong>
+                        and will be returned after the vehicle is returned in good condition.
+                    </li>
+                    <li>
+                        Please keep this invoice as proof of your booking.
+                    </li>
+                </ul>
             </div>
 
             <div class="invoice-footer-note">

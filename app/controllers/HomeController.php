@@ -102,11 +102,40 @@ class HomeController extends Controller
             // Menggunakan tanggal + jam agar booking di hari yang sama tetap valid,
             // selama jam kembali lebih besar dari jam pickup.
             // ==============================
-            $startDateTime = DateTime::createFromFormat('Y-m-d H:i', $tgl_pinjam . ' ' . $jam_pengambilan);
-            $finishDateTime = DateTime::createFromFormat('Y-m-d H:i', $tgl_kembali . ' ' . $jam_pengembalian);
+            $timezone = new DateTimeZone('Asia/Makassar'); // Bali / WITA
+
+            $startDateTime = DateTime::createFromFormat(
+                'Y-m-d H:i',
+                $tgl_pinjam . ' ' . $jam_pengambilan,
+                $timezone
+            );
+
+            $finishDateTime = DateTime::createFromFormat(
+                'Y-m-d H:i',
+                $tgl_kembali . ' ' . $jam_pengembalian,
+                $timezone
+            );
 
             if (!$startDateTime || !$finishDateTime) {
                 die('Format tanggal atau jam tidak valid.');
+            }
+
+            // ==============================
+            // VALIDASI MINIMAL PICKUP H+2 JAM
+            // ==============================
+            $now = new DateTime('now', $timezone);
+            $minPickupDateTime = (clone $now)->modify('+2 hours');
+
+            // Samakan ke menit, supaya kalau sekarang 14:00:30,
+            // pilihan 16:00 tetap dianggap valid.
+            $minPickupDateTime->setTime(
+                (int)$minPickupDateTime->format('H'),
+                (int)$minPickupDateTime->format('i'),
+                0
+            );
+
+            if ($startDateTime < $minPickupDateTime) {
+                die('Jam pengambilan minimal 2 jam dari waktu booking saat ini.');
             }
 
             if ($finishDateTime <= $startDateTime) {
