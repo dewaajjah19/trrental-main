@@ -11,6 +11,7 @@ ob_start();
 
 // =====================================================
 // HELPER: AMANKAN OUTPUT HTML
+// Digunakan agar data yang tampil di HTML aman dari karakter khusus.
 // =====================================================
 if (!function_exists('e')) {
     function e($value)
@@ -20,27 +21,63 @@ if (!function_exists('e')) {
 }
 
 // =====================================================
+// HELPER: URL GAMBAR ARMADA
+// Digunakan agar gambar armada bisa tampil dari 2 sumber:
+//
+// 1. Localhost:
+//    Database berisi nama file, contoh:
+//    armada_xxxxx.jpg
+//    Maka gambar diambil dari:
+//    /public/assets/img/armada/armada_xxxxx.jpg
+//
+// 2. Vercel Blob:
+//    Database berisi URL lengkap, contoh:
+//    https://xxxxx.public.blob.vercel-storage.com/armada/...
+//    Maka URL langsung dipakai tanpa ditambah path lokal.
+//
+// Ini penting agar gambar armada hasil upload dari Vercel tetap tampil.
+// =====================================================
+if (!function_exists('armadaImageUrl')) {
+    function armadaImageUrl($file)
+    {
+        if (empty($file)) {
+            return '';
+        }
+
+        if (preg_match('/^https?:\/\//i', $file)) {
+            return $file;
+        }
+
+        return BASE_URL . '/public/assets/img/armada/' . rawurlencode($file);
+    }
+}
+
+// =====================================================
 // HELPER: STATUS ARMADA BADGE
 // Menentukan warna badge berdasarkan status armada.
 // =====================================================
-function armadaStatusBadge($status)
-{
-    return match ($status) {
-        'tersedia'    => 'success',
-        'disewa'      => 'danger',
-        'maintenance' => 'warning',
-        default       => 'secondary'
-    };
+if (!function_exists('armadaStatusBadge')) {
+    function armadaStatusBadge($status)
+    {
+        return match ($status) {
+            'tersedia'    => 'success',
+            'disewa'      => 'danger',
+            'maintenance' => 'warning',
+            default       => 'secondary'
+        };
+    }
 }
 
-function armadaStatusLabel($status)
-{
-    return match ($status) {
-        'tersedia'    => 'Tersedia',
-        'disewa'      => 'Disewa',
-        'maintenance' => 'Maintenance',
-        default       => '-'
-    };
+if (!function_exists('armadaStatusLabel')) {
+    function armadaStatusLabel($status)
+    {
+        return match ($status) {
+            'tersedia'    => 'Tersedia',
+            'disewa'      => 'Disewa',
+            'maintenance' => 'Maintenance',
+            default       => '-'
+        };
+    }
 }
 ?>
 
@@ -125,7 +162,7 @@ function armadaStatusLabel($status)
                             <!-- Gambar Armada -->
                             <td class="text-center">
                                 <?php if (!empty($a['gambar_armada'])): ?>
-                                    <img src="<?= BASE_URL ?>/public/assets/img/armada/<?= e($a['gambar_armada']) ?>"
+                                    <img src="<?= e(armadaImageUrl($a['gambar_armada'])) ?>"
                                         width="60"
                                         height="45"
                                         style="object-fit:cover; border-radius:6px;">

@@ -2,6 +2,44 @@
 
 /** @var array $armada */
 
+// =====================================================
+// HELPER: AMANKAN OUTPUT HTML
+// Digunakan agar data dari database aman saat ditampilkan di HTML.
+// =====================================================
+if (!function_exists('e')) {
+    function e($value)
+    {
+        return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    }
+}
+
+// =====================================================
+// HELPER: URL GAMBAR ARMADA
+// Digunakan agar gambar armada bisa tampil dari 2 sumber:
+//
+// 1. Localhost:
+//    gambar_armada = armada_xxxxx.jpg
+//    dibaca dari /public/assets/img/armada/
+//
+// 2. Vercel Blob:
+//    gambar_armada = https://...blob.vercel-storage.com/...
+//    langsung dipakai sebagai URL gambar.
+// =====================================================
+if (!function_exists('armadaImageUrl')) {
+    function armadaImageUrl($file)
+    {
+        if (empty($file)) {
+            return '';
+        }
+
+        if (preg_match('/^https?:\/\//i', $file)) {
+            return $file;
+        }
+
+        return BASE_URL . '/public/assets/img/armada/' . rawurlencode($file);
+    }
+}
+
 $timeOptions = [
     '08:00',
     '09:00',
@@ -547,9 +585,9 @@ $timeOptions = [
                         </div>
 
                         <div class="vehicle-img-wrap">
-                            <?php if ($armada['gambar_armada']): ?>
-                                <img src="<?= BASE_URL ?>/public/assets/img/armada/<?= $armada['gambar_armada'] ?>"
-                                    class="img-fluid" alt="<?= $armada['nama_armada'] ?>">
+                            <?php if (!empty($armada['gambar_armada'])): ?>
+                                <img src="<?= e(armadaImageUrl($armada['gambar_armada'])) ?>"
+                                    class="img-fluid" alt="<?= e($armada['nama_armada']) ?>">
                             <?php else: ?>
                                 <i class="fas fa-car fa-5x" style="color:#ddd"></i>
                             <?php endif; ?>

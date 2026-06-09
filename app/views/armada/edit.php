@@ -10,11 +10,42 @@ ob_start();
 
 // =====================================================
 // HELPER: AMANKAN OUTPUT HTML
+// Digunakan agar data yang tampil di HTML aman dari karakter khusus.
 // =====================================================
 if (!function_exists('e')) {
     function e($value)
     {
         return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    }
+}
+
+// =====================================================
+// HELPER: URL GAMBAR ARMADA
+// Digunakan agar preview foto lama bisa tampil dari 2 sumber:
+//
+// 1. Localhost:
+//    gambar_armada = armada_xxxxx.jpg
+//    dibaca dari /public/assets/img/armada/
+//
+// 2. Vercel Blob:
+//    gambar_armada = https://...blob.vercel-storage.com/...
+//    langsung dipakai sebagai URL gambar.
+//
+// Ini penting agar armada yang gambarnya diupload dari Vercel tetap
+// bisa tampil saat admin membuka halaman edit.
+// =====================================================
+if (!function_exists('armadaImageUrl')) {
+    function armadaImageUrl($file)
+    {
+        if (empty($file)) {
+            return '';
+        }
+
+        if (preg_match('/^https?:\/\//i', $file)) {
+            return $file;
+        }
+
+        return BASE_URL . '/public/assets/img/armada/' . rawurlencode($file);
     }
 }
 ?>
@@ -174,7 +205,7 @@ if (!function_exists('e')) {
                         <!-- Preview Foto Lama -->
                         <?php if (!empty($armada['gambar_armada'])): ?>
                             <div class="mb-2">
-                                <img src="<?= BASE_URL ?>/public/assets/img/armada/<?= e($armada['gambar_armada']) ?>"
+                                <img src="<?= e(armadaImageUrl($armada['gambar_armada'])) ?>"
                                     height="80"
                                     style="border-radius:6px; object-fit:cover;">
                                 <small class="d-block text-muted mt-1">
@@ -190,7 +221,7 @@ if (!function_exists('e')) {
                             accept="image/*">
 
                         <small class="text-muted">
-                            Kosongkan jika tidak ingin mengganti foto.
+                            Kosongkan jika tidak ingin mengganti foto. Format JPG, PNG, atau WEBP. Maksimal 4MB untuk upload online.
                         </small>
                     </div>
 

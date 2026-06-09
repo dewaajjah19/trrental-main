@@ -4,6 +4,7 @@
 
 // =====================================================
 // HELPER: AMANKAN OUTPUT HTML
+// Digunakan agar data yang tampil di HTML aman dari karakter khusus.
 // =====================================================
 if (!function_exists('e')) {
     function e($value)
@@ -12,6 +13,18 @@ if (!function_exists('e')) {
     }
 }
 
+// =====================================================
+// HELPER: URL DOKUMEN CUSTOMER
+// Digunakan agar dokumen booking bisa tampil dari 2 sumber:
+//
+// 1. Localhost:
+//    foto_ktp / foto_sim / foto_tiket / foto_hotel berisi nama file.
+//    File dibaca dari /public/assets/img/dokumen/
+//
+// 2. Vercel Blob:
+//    field dokumen berisi URL lengkap.
+//    URL langsung dipakai tanpa ditambah path lokal.
+// =====================================================
 if (!function_exists('dokumenUrl')) {
     function dokumenUrl($file)
     {
@@ -29,6 +42,11 @@ if (!function_exists('dokumenUrl')) {
     }
 }
 
+// =====================================================
+// HELPER: NAMA DOKUMEN CUSTOMER
+// Digunakan agar kalau file berasal dari Vercel Blob,
+// yang tampil hanya nama file terakhir, bukan URL panjang.
+// =====================================================
 if (!function_exists('dokumenName')) {
     function dokumenName($file)
     {
@@ -42,6 +60,36 @@ if (!function_exists('dokumenName')) {
         }
 
         return $file;
+    }
+}
+
+// =====================================================
+// HELPER: URL GAMBAR ARMADA
+// Digunakan agar gambar armada bisa tampil dari 2 sumber:
+//
+// 1. Localhost:
+//    gambar_armada = armada_xxxxx.jpg
+//    dibaca dari /public/assets/img/armada/
+//
+// 2. Vercel Blob:
+//    gambar_armada = https://...blob.vercel-storage.com/...
+//    langsung dipakai sebagai URL gambar.
+//
+// Ini fix utama agar gambar armada yang diupload dari admin Vercel
+// tetap tampil di detail booking admin.
+// =====================================================
+if (!function_exists('armadaImageUrl')) {
+    function armadaImageUrl($file)
+    {
+        if (empty($file)) {
+            return '';
+        }
+
+        if (preg_match('/^https?:\/\//i', $file)) {
+            return $file;
+        }
+
+        return BASE_URL . '/public/assets/img/armada/' . rawurlencode($file);
     }
 }
 
@@ -239,8 +287,9 @@ ob_start();
                 style="background:#f8f9fc; border-radius:12px;">
 
                 <?php if (!empty($booking['gambar_armada'])): ?>
-                    <img src="<?= BASE_URL ?>/public/assets/img/armada/<?= e($booking['gambar_armada']) ?>"
-                        style="width:90px; height:70px; object-fit:cover; border-radius:8px; margin-right:16px">
+                    <img src="<?= e(armadaImageUrl($booking['gambar_armada'])) ?>"
+                        style="width:90px; height:70px; object-fit:cover; border-radius:8px; margin-right:16px"
+                        alt="<?= e($booking['nama_armada']) ?>">
                 <?php else: ?>
                     <div style="width:90px; height:70px; background:#eee; border-radius:8px; margin-right:16px; display:flex; align-items:center; justify-content:center">
                         <i class="fas fa-car text-muted"></i>

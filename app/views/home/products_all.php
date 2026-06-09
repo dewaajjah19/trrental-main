@@ -3,6 +3,44 @@
 /** @var array $armada */
 /** @var string $jenis */
 
+// =====================================================
+// HELPER: AMANKAN OUTPUT HTML
+// Digunakan agar data dari database aman saat ditampilkan di HTML.
+// =====================================================
+if (!function_exists('e')) {
+    function e($value)
+    {
+        return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    }
+}
+
+// =====================================================
+// HELPER: URL GAMBAR ARMADA
+// Digunakan agar halaman products_all bisa membaca gambar armada dari:
+//
+// 1. Localhost:
+//    gambar_armada = armada_xxxxx.jpg
+//    dibaca dari /public/assets/img/armada/
+//
+// 2. Vercel Blob:
+//    gambar_armada = https://...blob.vercel-storage.com/...
+//    langsung dipakai sebagai URL gambar.
+// =====================================================
+if (!function_exists('armadaImageUrl')) {
+    function armadaImageUrl($file)
+    {
+        if (empty($file)) {
+            return '';
+        }
+
+        if (preg_match('/^https?:\/\//i', $file)) {
+            return $file;
+        }
+
+        return BASE_URL . '/public/assets/img/armada/' . rawurlencode($file);
+    }
+}
+
 $isMobil = strtolower($jenis) === 'mobil';
 $pageTitle = $isMobil ? 'Choose Car' : 'Choose Motorbike';
 $icon = $isMobil ? 'fa-car' : 'fa-motorcycle';
@@ -14,7 +52,7 @@ $icon = $isMobil ? 'fa-car' : 'fa-motorcycle';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $pageTitle ?> - TR Rental</title>
+    <title><?= e($pageTitle) ?> - TR Rental</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?= BASE_URL ?>/public/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
@@ -58,22 +96,22 @@ $icon = $isMobil ? 'fa-car' : 'fa-motorcycle';
                 <?php else: ?>
                     <?php foreach ($armada as $a): ?>
                         <div class="col-lg-4 col-md-6 vehicle-item"
-                            data-search="<?= htmlspecialchars(strtolower($a['nama_armada'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                            data-search="<?= e(strtolower($a['nama_armada'] ?? '')) ?>">
 
-                            <div class="vehicle-card" onclick="window.location='<?= BASE_URL ?>/home/booking/<?= $a['id_armada'] ?>'">
+                            <div class="vehicle-card" onclick="window.location='<?= BASE_URL ?>/home/booking/<?= e($a['id_armada']) ?>'">
                                 <div class="vehicle-img-wrap">
-                                    <?php if ($a['gambar_armada']): ?>
-                                        <img src="<?= BASE_URL ?>/public/assets/img/armada/<?= $a['gambar_armada'] ?>"
-                                            alt="<?= $a['nama_armada'] ?>">
+                                    <?php if (!empty($a['gambar_armada'])): ?>
+                                        <img src="<?= e(armadaImageUrl($a['gambar_armada'])) ?>"
+                                            alt="<?= e($a['nama_armada']) ?>">
                                     <?php else: ?>
                                         <span class="no-img">
-                                            <i class="fas fa-car"></i>
+                                            <i class="fas <?= e($icon) ?>"></i>
                                         </span>
                                     <?php endif; ?>
                                 </div>
 
                                 <div class="vehicle-info">
-                                    <h6><?= $a['nama_armada'] ?> - <?= $a['tipe_armada'] ?></h6>
+                                    <h6><?= e($a['nama_armada']) ?> - <?= e($a['tipe_armada']) ?></h6>
                                     <span class="price-badge">
                                         Rp <?= number_format($a['harga_sewa_perhari'], 0, ',', '.') ?>/Day
                                     </span>
